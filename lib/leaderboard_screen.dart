@@ -20,7 +20,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     
     // Trigger confetti if the score meets the celebration condition
-    if (widget.score > 3) {
+    if (widget.score >= 2) {
       _confettiController.play();
     }
   }

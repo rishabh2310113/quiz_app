@@ -33,19 +33,19 @@ class CategoryScreen extends StatelessWidget {
           children: [
             CategoryButton(
               title: 'Mathematics',
-              onPressed: () => selectCategory(context, '19'), // Replace with category ID
+              onPressed: () => selectCategory(context, '19'),
             ),
             CategoryButton(
               title: 'Computers',
-              onPressed: () => selectCategory(context, '18'), // Replace with category ID
+              onPressed: () => selectCategory(context, '18'),
             ),
             CategoryButton(
               title: 'Gadgets',
-              onPressed: () => selectCategory(context, '30'), // Replace with category ID
+              onPressed: () => selectCategory(context, '30'),
             ),
             CategoryButton(
               title: 'Sports',
-              onPressed: () => selectCategory(context, '21'), // Replace with category ID
+              onPressed: () => selectCategory(context, '21'),
             ),
           ],
         ),
