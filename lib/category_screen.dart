@@ -27,7 +27,7 @@ class CategoryScreen extends StatelessWidget {
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[100], // Light background color
+          color: Colors.grey[100], 
         ),
         child: Padding(
           padding: const EdgeInsets.all(24.0),

@@ -19,7 +19,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
 
-    // Trigger confetti if the score meets the celebration condition
     if (widget.score >= 2) {
       _confettiController.play();
     }
@@ -36,7 +35,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background using teal theme
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -50,7 +48,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Circle avatar styled to display score
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -80,7 +77,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                // Congratulatory text
                 const Text(
                   'Congratulations!',
                   style: TextStyle(
@@ -99,7 +95,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                // Retry or Go Home Button
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
@@ -119,7 +114,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ],
             ),
           ),
-          // Centered confetti animation
           Center(
             child: ConfettiWidget(
               confettiController: _confettiController,

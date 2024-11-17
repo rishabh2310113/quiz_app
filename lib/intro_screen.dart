@@ -56,4 +56,3 @@ class IntroScreen extends StatelessWidget {
     );
   }
 }
-

@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:html/parser.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart'; 
 import 'leaderboard_screen.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -19,8 +22,10 @@ class _QuizScreenState extends State<QuizScreen> {
   int currentQuestionIndex = 0;
   int score = 0;
   bool isLoading = true;
-  List<String?> selectedAnswers = []; // List to store selected answers
+  List<String?> selectedAnswers = [];
   List<String> shuffledAnswers = [];
+  final int timeLimit = 15;
+  final CountDownController _controller = CountDownController();
 
   @override
   void initState() {
@@ -35,9 +40,18 @@ class _QuizScreenState extends State<QuizScreen> {
     if (response.statusCode == 200) {
       setState(() {
         questions = json.decode(response.body)['results'];
+        questions = questions.map((question) {
+          question['question'] = parseHtmlString(question['question']);
+          question['correct_answer'] = parseHtmlString(question['correct_answer']);
+          question['incorrect_answers'] = question['incorrect_answers']
+              .map((answer) => parseHtmlString(answer))
+              .toList();
+          return question;
+        }).toList();
         isLoading = false;
-        selectedAnswers = List<String?>.filled(questions.length, null); // Initialize list with nulls
-        setShuffledAnswers(); // Set answers for the first question
+        selectedAnswers = List<String?>.filled(questions.length, null);
+        setShuffledAnswers();
+        _controller.start();
       });
     } else {
       setState(() {
@@ -49,48 +63,38 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  String parseHtmlString(String htmlString) {
+    final document = parse(htmlString);
+    return document.body?.text ?? htmlString;
+  }
+
   void setShuffledAnswers() {
-    // Create a new list containing incorrect answers + the correct answer
     shuffledAnswers = List<String>.from(questions[currentQuestionIndex]['incorrect_answers']);
     shuffledAnswers.add(questions[currentQuestionIndex]['correct_answer']);
     shuffledAnswers.shuffle(Random());
   }
 
   void checkAnswer() {
-    // Check if the selected answer for the current question is correct
-    if (selectedAnswers[currentQuestionIndex] == questions[currentQuestionIndex]['correct_answer']) {
+    if (selectedAnswers[currentQuestionIndex] != null &&
+        selectedAnswers[currentQuestionIndex] == questions[currentQuestionIndex]['correct_answer']) {
       score++;
     }
   }
 
   void goToNextQuestion() {
-    if (selectedAnswers[currentQuestionIndex] != null) {
-      checkAnswer();
-      if (currentQuestionIndex < questions.length - 1) {
-        setState(() {
-          currentQuestionIndex++;
-          setShuffledAnswers(); // Shuffle answers for the next question
-        });
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => LeaderboardScreen(score: score, totalQuestions: questions.length),
-          ),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an answer before proceeding.')),
-      );
-    }
-  }
-
-  void goToPreviousQuestion() {
-    if (currentQuestionIndex > 0) {
+    checkAnswer();
+    if (currentQuestionIndex < questions.length - 1) {
       setState(() {
-        currentQuestionIndex--;
-        setShuffledAnswers(); // Shuffle answers for the previous question
+        currentQuestionIndex++;
+        setShuffledAnswers();
       });
+      _controller.restart(duration: timeLimit);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => LeaderboardScreen(score: score, totalQuestions: questions.length),
+        ),
+      );
     }
   }
 
@@ -117,6 +121,31 @@ class _QuizScreenState extends State<QuizScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            CircularCountDownTimer(
+              duration: timeLimit,
+              initialDuration: 0,
+              controller: _controller,
+              width: 80,
+              height: 80,
+              ringColor: Colors.grey[300]!,
+              ringGradient: null,
+              fillColor: Colors.teal[700]!,
+              fillGradient: null,
+              backgroundColor: Colors.white,
+              strokeWidth: 10.0,
+              strokeCap: StrokeCap.round,
+              textStyle: const TextStyle(
+                fontSize: 20.0,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+              isReverse: true,
+              isReverseAnimation: true,
+              onComplete: () {
+                goToNextQuestion();
+              },
+            ),
+            const SizedBox(height: 10),
             Container(
               padding: EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -136,10 +165,10 @@ class _QuizScreenState extends State<QuizScreen> {
                       title: Text(answer),
                       leading: Radio<String>(
                         value: answer,
-                        groupValue: selectedAnswers[currentQuestionIndex], // Retrieve saved answer
+                        groupValue: selectedAnswers[currentQuestionIndex],
                         onChanged: (value) {
                           setState(() {
-                            selectedAnswers[currentQuestionIndex] = value; // Save selected answer
+                            selectedAnswers[currentQuestionIndex] = value;
                           });
                         },
                       ),
@@ -149,30 +178,18 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: currentQuestionIndex > 0 ? goToPreviousQuestion : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[700],
-                  ),
-                  child: const Text(
-                    'Previous',
-                    style: TextStyle(color: Colors.white),
-                  ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: goToNextQuestion,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal[700],
                 ),
-                ElevatedButton(
-                  onPressed: goToNextQuestion,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[700],
-                  ),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                child: const Text(
+                  'Next',
+                  style: TextStyle(color: Colors.white),
                 ),
-              ],
+              ),
             ),
           ],
         ),

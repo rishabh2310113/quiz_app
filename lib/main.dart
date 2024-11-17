@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'intro_screen.dart';
-
+import 'splash_screen.dart';
 void main() {
   runApp(QuizApp());
 }
@@ -14,7 +13,8 @@ class QuizApp extends StatelessWidget {
         primarySwatch: Colors.teal,
         scaffoldBackgroundColor: const Color(0xFFE0F7FA),
       ),
-      home: IntroScreen(),
+      home: SplashScreen(),
     );
   }
 }
+
